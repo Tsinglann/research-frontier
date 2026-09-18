@@ -95,11 +95,14 @@ Flickable {
                             opacity: 0.45
                         }
                         Item { Layout.fillWidth: true }
+                        // 只有拿到**真实论文页**才显示按钮；没有就隐藏，
+                        // 不拿搜索引擎检索页凑数（点了必须是有效论文网页）
                         PC3.Button {
+                            visible: !!(modelData.url && modelData.url !== "")
                             text: "🔗 原文"
                             font.pixelSize: 12
                             implicitHeight: 30
-                            PC3.ToolTip.text: "在浏览器打开这篇经典论文"
+                            PC3.ToolTip.text: "在浏览器打开这篇经典论文的网页"
                             PC3.ToolTip.visible: hovered
                             onClicked: if (view.openUrlCallback)
                                            view.openUrlCallback(modelData.url)

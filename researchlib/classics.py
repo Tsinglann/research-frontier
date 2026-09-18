@@ -204,10 +204,6 @@ LINK_MAP = {
     "Equation of State Calculations by Fast Computing Machines":
         "https://doi.org/10.1063/1.1699114",
     "Simulating Physics with Computers": "https://doi.org/10.1007/BF02650179",
-    "There's Plenty of Room at the Bottom":
-        "https://web.archive.org/web/20140201191440/http://www.zyvex.com/nanotech/feynman.html",
-    "Brownian Motion and Stochastic Theory of Irreversible Processes":
-        "https://www.worldcat.org/search?q=van+Kampen+Stochastic+Processes+in+Physics+and+Chemistry",
     "Brownian Motion in a Field of Force and the Diffusion Model of Chemical Reactions":
         "https://doi.org/10.1016/S0031-8914(40)90098-2",
     "The Fokker-Planck Equation: Methods of Solution and Applications":
@@ -274,15 +270,23 @@ LINK_MAP = {
 }
 
 
-def link_of(item):
-    """取一篇经典的原文链接。
+# 只登记**真实论文本体页面**（出版社 DOI 页 / arXiv abs 页 / 官方讲义页）。
+# 拿不到可靠论文页的条目干脆不登记 —— 界面会隐藏「原文」按钮，
+# 而不是拿搜索引擎检索页凑数（点开必须是有效论文网页）。
+NO_LINK_TITLES = {
+    # 费曼 1959 演讲：原始站点已失效，检索到的镜像页无法确认稳定可达
+    "There's Plenty of Room at the Bottom",
+    # van Kampen 专著：只有出版社书页/馆藏检索页，非论文本体
+    "Brownian Motion and Stochastic Theory of Irreversible Processes",
+}
 
-    优先库内登记的 DOI / arXiv 直链；没登记的退回检索页
-    （老论文常无 DOI，检索页至少能落到出版社或存档站）。
+
+def link_of(item):
+    """取一篇经典的论文网页地址；没有可靠地址时返回空字符串。
+
+    调用方（小组件/网页）在拿不到地址时**隐藏「原文」按钮**。
     """
-    u = LINK_MAP.get(item.get('title') or '')
-    if u:
-        return u
-    from urllib.parse import quote_plus
-    q = quote_plus(f"{item.get('title', '')} {item.get('authors', '')}")
-    return f'https://scholar.google.com/scholar?q={q}'
+    t = item.get('title') or ''
+    if t in NO_LINK_TITLES:
+        return ''
+    return LINK_MAP.get(t, '')

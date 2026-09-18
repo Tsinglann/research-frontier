@@ -473,7 +473,7 @@ function renderDetail(){
       h += '<div class="classic"><h3>' + (i+1) + '. ' + esc(c.title) + '</h3>';
       h += '<div class="meta">' + esc(c.authors||'') + ' — ' + esc(c.venue||'')
          + ' (' + (c.year||'') + ')';
-      if (c.url){
+      if (c.url){   // 只登记了真实论文页；没有就整条不显示，不拿搜索页凑数
         h += ' · <a href="' + esc(c.url) + '" target="_blank" rel="noopener">🔗 原文</a>';
       }
       h += '</div>';
