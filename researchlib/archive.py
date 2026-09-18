@@ -4,7 +4,7 @@
 
 目录结构（在用户的 Documents 下，便于自己翻看与长期备份）：
 
-  <workdir>/daily/
+  ~/Documents/daily/
     ├── README.md              说明
     ├── index.json             所有日期的索引（网页日历读它）
     ├── site/index.html        日历回顾网页（离线可用，无外部依赖）
@@ -24,7 +24,7 @@ import os
 from . import config as C
 from .util import log, save_json
 
-ARCHIVE_DIR = os.path.join(C.WORKDIR, 'daily')
+ARCHIVE_DIR = os.path.join(C.HOME, 'Documents', 'daily')
 SITE_DIR = os.path.join(ARCHIVE_DIR, 'site')
 INDEX_JSON = os.path.join(ARCHIVE_DIR, 'index.json')
 
@@ -210,7 +210,7 @@ def build_site():
     return os.path.join(SITE_DIR, 'index.html')
 
 
-README_TEXT = """# 每日存档
+README_TEXT = """# daily
 
 由 `research_widget` 每天 06:00 自动写入，按日期结构化保存。
 
@@ -298,6 +298,11 @@ _HTML = r"""<!DOCTYPE html>
   h3.sec { font-size:15.5px; color:var(--accent2); margin:18px 0 6px; }
   .brief p { margin:8px 0; }
   .classic { border-left:3px solid var(--warn); padding-left:12px; margin:14px 0; }
+  .classictop { display:flex; align-items:center; gap:14px; flex-wrap:wrap;
+                margin:10px 0 4px; }
+  .btn { background:var(--panel2); color:var(--fg); border:1px solid var(--line);
+         border-radius:8px; padding:5px 14px; font-size:14px; cursor:pointer; }
+  .btn:hover { border-color:var(--accent); color:var(--accent); }
   .classic h3 { margin:0 0 3px; font-size:16.5px; }
   .empty { color:var(--dim); padding:30px 0; text-align:center; }
   ul.brief { margin:6px 0 6px 4px; padding-left:18px; }
@@ -435,11 +440,14 @@ function renderDetail(){
   const mini = document.getElementById('classicMini');
   if (!d){ el.innerHTML = '<div class="empty">这一天没有记录</div>';
            if (mini) mini.textContent = '选择日期后显示'; return; }
-  const cl = d.classic;
+  const clList = (d.classic_list && d.classic_list.length) ? d.classic_list
+               : (d.classic ? [d.classic] : []);
+  const cl = clList[0];
   if (mini){
     mini.innerHTML = cl && cl.title
       ? '<b>'+esc(cl.title)+'</b><br><span class="sub">'+esc(cl.authors||'')+' · '
         +esc(cl.venue||'')+' ('+(cl.year||'')+')</span>'
+        + (clList.length > 1 ? '<br><span class="sub">当天共 '+clList.length+' 篇</span>' : '')
       : '这一天没有经典回顾';
   }
   let h = '<div class="card"><h2>'+d.date+' · 入选 '+d.picked_count+' 篇'
@@ -449,14 +457,31 @@ function renderDetail(){
         + '</h2>';
   h += '<div class="meta">候选 '+(d.candidate_count||'-')+' 篇 · 窗口 '
      + (d.window_days||'-')+' 天 · 模型 '+(d.models?d.models.synth:'-')+'</div>';
-  if (cl && cl.title){
-    h += '<div class="classic"><h3>📜 '+esc(cl.title)+'</h3>';
-    h += '<div class="meta">'+esc(cl.authors||'')+' — '+esc(cl.venue||'')
-       + ' ('+(cl.year||'')+')</div>';
-    (cl.tags||[]).forEach(t => h += '<span class="tag">'+esc(t)+'</span>');
-    if (cl.note) h += '<p class="abs">'+esc(cl.note)+'</p>';
-    if (cl.review) h += md2html(cl.review);
+  if (clList.length){
+    // 顶部操作条：「加一篇」只有本地服务在跑时才可用
+    h += '<div class="classictop"><span class="sub">📜 当天经典回顾 · 共 '
+       + clList.length + ' 篇</span>';
+    if (window.RF_SERVER){
+      h += '<button class="btn" onclick="window.rfNewClassic()">🎲 加一篇</button>';
+    } else {
+      h += '<span class="sub">（用 <code>python3 server.py --open</code> 打开本页'
+         + '才能「加一篇」）</span>';
+    }
     h += '</div>';
+
+    clList.forEach((c, i) => {
+      h += '<div class="classic"><h3>' + (i+1) + '. ' + esc(c.title) + '</h3>';
+      h += '<div class="meta">' + esc(c.authors||'') + ' — ' + esc(c.venue||'')
+         + ' (' + (c.year||'') + ')';
+      if (c.url){
+        h += ' · <a href="' + esc(c.url) + '" target="_blank" rel="noopener">🔗 原文</a>';
+      }
+      h += '</div>';
+      (c.tags||[]).forEach(t => h += '<span class="tag">' + esc(t) + '</span>');
+      if (c.note) h += '<p class="abs">' + esc(c.note) + '</p>';
+      if (c.review) h += md2html(c.review);
+      h += '</div>';
+    });
   }
   if (d.brief_markdown){
     h += '<h3 class="sec">📊 本周期简报</h3><div class="brief">'+md2html(d.brief_markdown)+'</div>';

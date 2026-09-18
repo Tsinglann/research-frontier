@@ -45,8 +45,9 @@ AI 会照着 `AGENT_GUIDE.md` 完成剩下的事：跑配置向导、探测桌�
 | --- | --- |
 | 🧭 **研究画像** | 只读扫描你的 Zotero 库，统计主题词、双词组、期刊分布，生成 `terms.json` |
 | 📄 **每周前沿** | 按核心术语检索 arXiv + 按 ISSN 抓你常读期刊，打分筛选后由大模型写中文简介 |
-| 📜 **每日经典** | 内置 36 篇开山之作（Metropolis 1953、Kramers 1940、Landauer 1961、Jarzynski 1997…），每天一篇中文回顾，可「换一篇」不限次数 |
-| 🗓 **日历回顾网页** | 每天结果结构化存档 + 纯离线网页（含 **KaTeX 公式渲染**），按日期回看 |
+| 📜 **每日经典** | 内置 36 篇开山之作（Metropolis 1953、Kramers 1940、Landauer 1961、Jarzynski 1997…），每天一篇中文回顾；点「🎲 加一篇」**累积**更多（不替换），每篇都有「🔗 原文」按钮直连论文网页 |
+| 🗓 **日历回顾网页** | 每天结果结构化存档 + 网页（含 **KaTeX 公式渲染**），按日期回看 |
+| 🌐 **网页端的「加一篇」** | 用 `python3 server.py --open` 打开网页时可用（`file://` 下浏览器会拦截写请求，所以需要一个只监听 127.0.0.1 的本地小服务） |
 | 🔖 **一键收藏** | 把论文作为条目写进 Zotero 指定分类（写库前会检查 Zotero 已退出并自动备份） |
 | 👍 **点赞反馈** | 你点赞的论文会影响后续抓取排序（同期刊/同话题加权） |
 | 📖 **论文翻译** | 走随包携带的翻译规范（`translate/TRANSLATION_SPEC.md`）：定位全文 → 建项目 → 提取文本与字体 → 交给 AI 产出中文 LaTeX → 回写 Zotero |
@@ -75,7 +76,9 @@ python3 update.py status            # 数据状态 / API key / Zotero 是否可�
 python3 update.py profile           # 只重建画像
 python3 update.py crawl             # 只抓取+评分，打印候选
 python3 update.py synth             # 只重新生成综合简报
-python3 classic.py new              # 换一篇经典
+python3 classic.py new              # 加一篇经典（累积，不替换）
+python3 classic.py show             # 看当天已累积的经典
+python3 server.py --open            # 启动本地服务并打开网页（网页端可「加一篇」）
 python3 preview.py [--profile|--all|N|--md]
 bash install.sh --no-timer          # 只装小组件
 systemctl --user list-timers research-frontier.timer
@@ -146,6 +149,7 @@ systemctl --user list-timers research-frontier.timer
 | 简介或简报为空 | 看 `runtime/update.log` 里的报错；多为 API Key 失效或超时 |
 | 抓取排序不合理 | 编辑 `terms.json` 的 `core` / `secondary`，或调整 `config.json` 的 `min_score` |
 | 点「收藏」提示 Zotero 在运行 | 完全退出 Zotero（Ctrl+Q）再试 |
+| 网页上「加一篇」显示不可用 | 用 `python3 server.py --open` 打开网页（`file://` 打开时无法写数据，这是浏览器的限制）|
 | 点「翻译」提示没有全文 | 本包**不下载全文**。请在 Zotero 里获取该论文的 PDF（条目右键「查找可用的 PDF」或手工拖入），再重跑 |
 | 网页公式显示成灰底等宽字 | 跑 `python3 setup_katex.py` 补齐 KaTeX |
 | 定时器没触发 | `systemctl --user list-timers research-frontier.timer`；未登录时 user timer 不跑 |

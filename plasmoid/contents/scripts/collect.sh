@@ -39,7 +39,7 @@ sys.stdout.write(json.dumps(d,ensure_ascii=False,separators=(",",":")))
       # 子进程，plasmashell 回收子进程时这次启动就断了 ——
       # 表现为「第一次能打开，关掉之后再点就没反应」。
       # 所以用 setsid + nohup 起一个独立会话，再 disown。
-      u="$DATA_DIR/../daily/site/index.html"
+      u="$HOME/Documents/daily/site/index.html"
       if [ ! -f "$u" ]; then
           echo "MISSING $u"
       else

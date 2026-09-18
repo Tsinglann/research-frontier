@@ -148,8 +148,9 @@ def build_brief(top_n=None, offline=False):
         log(f'综合简报生成失败：{e}')
 
     # 6.5) 经典论文回顾（每天一篇，按日期稳定选取，结果按 key 缓存）
-    # offset 让「换一篇」按钮能取到典籍库里的下一篇
-    offset = int(load_json(C.STATE_JSON, {}).get('classic_offset', 0) or 0)
+    # 当日首篇：由 classic_offset 决定（「加一篇」会递增它并追加到列表）
+    st_now = load_json(C.STATE_JSON, {})
+    offset = int(st_now.get('classic_offset', 0) or 0)
     classic = classics.pick(offset=offset)
     ckey = 'classic:' + classic['key']
     centry = cache.get(ckey)
@@ -166,8 +167,14 @@ def build_brief(top_n=None, offline=False):
         except Exception as e:                  # noqa: BLE001
             log(f'经典回顾生成失败：{e}')
     classic['review'] = classic_text
+    classic['url'] = classics.link_of(classic)
+    # 当日经典列表：更新时保留当天已经「加」过的那些，只把首篇换成最新选中的
+    prev_list = st_now.get('classic_list') or []
+    keep = [x for x in prev_list if x.get('key') != classic.get('key')]
+    classic_list = [classic] + keep
     log(f'经典回顾：{classic["year"]} {classic["title"][:52]}'
-        + ('（缓存）' if classic.get('cached') else ''))
+        + ('（缓存）' if classic.get('cached') else '')
+        + f'；当日累计 {len(classic_list)} 篇')
 
     elapsed = round(time.time() - t0, 1)
     brief = {
@@ -185,6 +192,7 @@ def build_brief(top_n=None, offline=False):
         'markdown_short': _compact_brief(synth_md),
         'error': synth_err,
         'classic': classic,
+        'classic_list': classic_list,
     }
 
     # 7) papers.json —— 只保留部件需要的字段
@@ -229,7 +237,7 @@ def build_brief(top_n=None, offline=False):
     save_json(C.BRIEF_JSON, brief)
     write_md(prof, brief, papers_out)
 
-    # 9) 每日结构化存档（<workdir>/daily/）+ 刷新日历网页
+    # 9) 每日结构化存档（~/Documents/daily/）+ 刷新日历网页
     try:
         archive.save_day(brief.get('generated_text', '')[:10] or
                          time.strftime('%Y-%m-%d'),
@@ -239,6 +247,7 @@ def build_brief(top_n=None, offline=False):
 
     # 记录这是哪一周生成的前沿数据（update.py 据此判断本周是否已刷过）
     state['frontier_week'] = time.strftime('%G-W%V')
+    state['classic_list'] = classic_list
     state['summaries'] = cache
     state['runs'] = ([{'ts': brief['generated'], 'text': brief['generated_text'],
                        'picked': len(papers_out), 'new': new_calls,

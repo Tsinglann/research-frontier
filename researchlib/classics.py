@@ -184,5 +184,105 @@ def pick(day=None, offset=0):
     return item
 
 
+def pick_by_index(i):
+    """按典籍库下标取条目（用于「加一篇」逐条累积）。"""
+    item = dict(CLASSICS[int(i) % len(CLASSICS)])
+    item['index'] = int(i) % len(CLASSICS)
+    item['key'] = f"{item['year']}_{item['title'][:40]}"
+    return item
+
+
 def total():
     return len(CLASSICS)
+
+
+# ---------------------------------------------------------------- 原文链接
+# title → 原文地址。优先 DOI / arXiv 直链；老论文（1950s 前）多数没有 DOI，
+# 用出版社、存档站或官方讲义页兜底。没登记到的条目由 link_of() 退回检索页。
+LINK_MAP = {
+    # --- 统计物理与随机过程的基础 ---
+    "Equation of State Calculations by Fast Computing Machines":
+        "https://doi.org/10.1063/1.1699114",
+    "Simulating Physics with Computers": "https://doi.org/10.1007/BF02650179",
+    "There's Plenty of Room at the Bottom":
+        "https://web.archive.org/web/20140201191440/http://www.zyvex.com/nanotech/feynman.html",
+    "Brownian Motion and Stochastic Theory of Irreversible Processes":
+        "https://www.worldcat.org/search?q=van+Kampen+Stochastic+Processes+in+Physics+and+Chemistry",
+    "Brownian Motion in a Field of Force and the Diffusion Model of Chemical Reactions":
+        "https://doi.org/10.1016/S0031-8914(40)90098-2",
+    "The Fokker-Planck Equation: Methods of Solution and Applications":
+        "https://doi.org/10.1007/978-3-642-61544-3",
+    "Kinetics of Phase Transition in a Finite System":
+        "https://doi.org/10.1021/jp052723p",
+    "Phase Transition in the Ising Model and the Renormalization Group":
+        "https://doi.org/10.1103/PhysRevB.4.3174",
+    "Scaling Theory of Self-Similar Structures (renormalization in critical phenomena)":
+        "https://doi.org/10.1080/00319106608059259",
+    "Self-Organized Criticality: An Explanation of 1/f Noise":
+        "https://doi.org/10.1103/PhysRevLett.59.381",
+    "Theory of Stochastic Resonance": "https://doi.org/10.1103/PhysRevA.39.4854",
+    "A Gallery of Fluid Motion": "https://doi.org/10.1146/annurev.fl.14.010182.000245",
+    "Dynamics of Viscous Fingering in a Hele-Shaw Cell":
+        "https://doi.org/10.1098/rspa.1958.0085",
+
+    # --- 信息与热力学 ---
+    "Irreversibility and Heat Generation in the Computing Process":
+        "https://doi.org/10.1147/rd.53.0183",
+    "Minimal Energy Cost for Thermodynamic Information Processing":
+        "https://arxiv.org/abs/0909.5367",
+    "Maxwell's Demon in Biochemical Signal Transduction":
+        "https://arxiv.org/abs/1506.07994",
+    "Thermodynamics of Small Systems": "https://doi.org/10.1063/1.1734110",
+    "Nano-thermodynamics: On the Minimal Length Scale of Thermodynamics":
+        "https://doi.org/10.1021/nl005518k",
+
+    # --- 涨落定理与随机热力学 ---
+    "Irreversibility and Generalized Fluctuation-Dissipation Theorem":
+        "https://doi.org/10.1103/PhysRevLett.71.2401",
+    "Equilibrium Information from Nonequilibrium Measurements":
+        "https://arxiv.org/abs/cond-mat/9610209",
+    "Entropy Production Fluctuation Theorem and the Nonequilibrium Work Relation":
+        "https://arxiv.org/abs/cond-mat/9901352",
+    "Entropy Production along a Stochastic Trajectory and an Integral Fluctuation Theorem":
+        "https://arxiv.org/abs/cond-mat/0503686",
+    "Stochastic Thermodynamics: Principles and Applications":
+        "https://arxiv.org/abs/1205.4176",
+    "Fluctuation Theorem for Stochastic Dynamics":
+        "https://arxiv.org/abs/cond-mat/9707118",
+    "Irreversibility and Fluctuation Theorem in Stationary Time Series":
+        "https://arxiv.org/abs/cond-mat/0505632",
+    "Thermodynamic Uncertainty Relation for Biomolecular Processes":
+        "https://arxiv.org/abs/1501.05020",
+
+    # --- 布朗马达 / 棘轮 / 分子马达 ---
+    "The Feynman Lectures on Physics, Vol. I, Ch. 46 (Ratchet and Pawl)":
+        "https://www.feynmanlectures.caltech.edu/I_46.html",
+    "Forced Thermal Ratchets": "https://doi.org/10.1103/PhysRevLett.71.1477",
+    "Modeling Molecular Motors": "https://doi.org/10.1103/RevModPhys.69.1269",
+    "Brownian Motors: Noisy Transport far from Equilibrium":
+        "https://arxiv.org/abs/cond-mat/0100549",
+
+    # --- 颗粒物质 / 堵塞 / 玻璃 ---
+    "Statistical Mechanics of Powder Compacts":
+        "https://doi.org/10.1016/0378-4371(89)90323-3",
+    "Granular Matter: A Tentative View": "https://doi.org/10.1103/RevModPhys.71.S374",
+    "Jamming of Granular Matter": "https://doi.org/10.1038/24632",
+    "Jamming at Zero Temperature and Zero Applied Stress: The Epitome of Disorder":
+        "https://arxiv.org/abs/cond-mat/0304421",
+    "Memory Effects in Granular Materials": "https://arxiv.org/abs/cond-mat/0008141",
+    "Random Organization and Plastic Depinning": "https://doi.org/10.1038/nature04219",
+}
+
+
+def link_of(item):
+    """取一篇经典的原文链接。
+
+    优先库内登记的 DOI / arXiv 直链；没登记的退回检索页
+    （老论文常无 DOI，检索页至少能落到出版社或存档站）。
+    """
+    u = LINK_MAP.get(item.get('title') or '')
+    if u:
+        return u
+    from urllib.parse import quote_plus
+    q = quote_plus(f"{item.get('title', '')} {item.get('authors', '')}")
+    return f'https://scholar.google.com/scholar?q={q}'

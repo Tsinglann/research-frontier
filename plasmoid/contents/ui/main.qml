@@ -162,16 +162,8 @@ PlasmoidItem {
                 "markdown": obj.markdown || "",
                 "markdown_short": obj.markdown_short || obj.markdown || "",
                 "error": obj.error || "",
-                "classic": obj.classic ? {
-                    "title": obj.classic.title || "",
-                    "authors": obj.classic.authors || "",
-                    "year": obj.classic.year || "",
-                    "venue": obj.classic.venue || "",
-                    "tags": obj.classic.tags || [],
-                    "note": obj.classic.note || "",
-                    "review": obj.classic.review || "",
-                    "cached": !!obj.classic.cached
-                } : null
+                "classic": root.normClassic(obj.classic),
+                "classic_list": (obj.classic_list || []).map(root.normClassic)
             }
             if (obj.generated) root.lastUpdateTs = obj.generated
         }
@@ -192,6 +184,18 @@ PlasmoidItem {
         var src = dataPath(kind)
         ds.disconnectSource(src)
         ds.connectSource(src)
+    }
+
+    // 归一化一篇经典（字段齐全，避免视图读到 undefined）
+    function normClassic(c) {
+        if (!c) return null
+        return {
+            "title": c.title || "", "authors": c.authors || "",
+            "year": c.year || "", "venue": c.venue || "",
+            "tags": c.tags || [], "note": c.note || "",
+            "review": c.review || "", "url": c.url || "",
+            "key": c.key || "", "cached": !!c.cached
+        }
     }
 
     function loadAll() {
@@ -227,21 +231,21 @@ PlasmoidItem {
     P5S.DataSource {
         id: dsProfile
         engine: "executable"
-        connectedSources: ["/bin/cat @DATA_DIR@/profile.json"]
+        connectedSources: ["/bin/cat @PROJECT_DIR@/runtime/profile.json"]
         interval: 120000
         onNewData: function (src, data) { root.ingest("profile", data) }
     }
     P5S.DataSource {
         id: dsPapers
         engine: "executable"
-        connectedSources: ["/bin/cat @DATA_DIR@/papers.json"]
+        connectedSources: ["/bin/cat @PROJECT_DIR@/runtime/papers.json"]
         interval: 120000
         onNewData: function (src, data) { root.ingest("papers", data) }
     }
     P5S.DataSource {
         id: dsBrief
         engine: "executable"
-        connectedSources: ["/bin/cat @DATA_DIR@/brief.json"]
+        connectedSources: ["/bin/cat @PROJECT_DIR@/runtime/brief.json"]
         interval: 120000
         onNewData: function (src, data) { root.ingest("brief", data) }
     }
@@ -302,6 +306,13 @@ PlasmoidItem {
     function openBrowser() {
         console.log("[researchwatch] openBrowser → " + openCmd)
         dsOpen.connectSource(openCmd)
+    }
+
+    // 用系统浏览器打开任意 URL（经典论文的「原文」按钮用它）
+    function openUrl(url) {
+        if (!url) return
+        console.log("[researchwatch] openUrl → " + url)
+        Qt.openUrlExternally(url)
     }
 
     // 「全文」按钮：直接在浏览器打开这篇论文的网页。
@@ -497,6 +508,7 @@ PlasmoidItem {
         id: classicComp
         ClassicView {
             brief: root.brief
+            openUrlCallback: root.openUrl
             onNewClassic: root.runAction("newclassic", 0)
         }
     }
