@@ -4,12 +4,13 @@
 
 用法：translate_worker.py <论文序号>
 
-流程（严格对齐 translatepaper/_TRANSLATION_SPEC.md）：
+流程（严格对齐 translate/TRANSLATION_SPEC.md）：
 
-  1. **先查 Zotero**：按 DOI → arXiv → 标题找条目；
-     命中且**已有全文 PDF** 就直接复用它（不重复下载）
-  2. 没有则联网取：arXiv 直链 → 代理兜底 → 项目里已验证的 fetchpdf.py（按 DOI）
-  3. 在 translatepaper 下按 SOP 建项目目录 <一作姓>_<年>_<短标题>/
+  1. **只在 Zotero 里找**：按 DOI → arXiv → 标题定位条目，并取它已有的 PDF 全文
+  2. **本包不具备下载全文的能力**。若 Zotero 里没有全文，任务就此停下并明确提示你
+     先在 Zotero 里获取该论文（点击 Zotero 的「查找可用的 PDF」或手工导入），
+     再重跑翻译任务
+  3. 在工作目录的 translations/ 下按 SOP 建项目目录 <一作姓>_<年>_<短标题>/
   4. SOP 要求的数据准备：
        pdftotext source.txt
        pdftohtml -xml -i fonts.xml
@@ -117,27 +118,11 @@ def main():
         except Exception as e:                              # noqa: BLE001
             log(f'  复制 Zotero 全文失败：{e}')
     if not (os.path.exists(pdf) and os.path.getsize(pdf) > 20000):
-        _update_state(key, progress=35, msg='联网下载原文 PDF')
-        ok = False
-        arx = (paper.get('arxiv') or '').strip()
-        if arx:
-            url = f'https://arxiv.org/pdf/{arx}'
-            _run(['curl', '-sL', '--max-time', '240', '-o', pdf, url], desc='arXiv 直连')
-            ok = os.path.exists(pdf) and os.path.getsize(pdf) > 20000
-            if not ok:
-                _run(['curl', '-sL', '--max-time', '240', '-x', 'http://127.0.0.1:7890',
-                      '-o', pdf, url], desc='arXiv 走代理')
-                ok = os.path.exists(pdf) and os.path.getsize(pdf) > 20000
-        if not ok and paper.get('doi'):
-            fp = os.path.join(TOOLS, 'fetchpdf.py')
-            if os.path.exists(fp):
-                _run(['/usr/bin/python3', fp, paper['doi'], '-o', pdf], desc='fetchpdf')
-                ok = os.path.exists(pdf) and os.path.getsize(pdf) > 20000
-        if not ok:
-            if not getattr(C, 'ENABLE_AUTO_FETCH', False):
-                return fail('未找到全文，且发行版默认关闭自动下载（见 config.json 的 enable_auto_fetch）')
-            return fail('取全文失败：Zotero 无条目、arXiv 无直链、DOI 下载也未成功')
-        src_from = src_from or '联网下载'
+        # 本发行版**不下载全文**：没有就是没有，明确让人去 Zotero 里补。
+        return fail(
+            'Zotero 里没有这篇论文的全文 PDF。请先在 Zotero 中获取它'
+            '（条目右键「查找可用的 PDF」，或手工拖入 PDF），然后重跑翻译任务。'
+            '\n（本包不包含自动下载全文的功能，这是有意为之。）')
     log(f'  原文 PDF：{os.path.getsize(pdf)//1024} KB（来源：{src_from}）')
 
     # ---------- 3) SOP 数据准备 ----------

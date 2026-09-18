@@ -53,6 +53,4 @@
   "zotero_collection": "研究前沿app收藏",
   "_zotero_collection": "点『收藏』时把论文写进 Zotero 的这个分类（不存在会自动创建）。",
 
-  "enable_auto_fetch": false,
-  "_enable_auto_fetch": "发行版默认 false：**不自动抓取/下载论文全文**。改为 true 才会尝试下载 PDF。"
 }

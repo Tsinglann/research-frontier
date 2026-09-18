@@ -25,7 +25,6 @@ _DEFAULTS = {
     'model_synth': 'deepseek-v4-pro',
     'journals': [],
     'zotero_collection': '研究前沿app收藏',
-    'enable_auto_fetch': False,
 }
 
 
@@ -96,7 +95,6 @@ TOP_N = int(CONFIG['top_n'])
 MIN_SCORE = float(CONFIG['min_score'])
 MAX_PER_SOURCE = int(CONFIG['max_per_source'])
 JOURNAL_QUOTA = 4
-ENABLE_AUTO_FETCH = bool(CONFIG['enable_auto_fetch'])
 ZOTERO_COLLECTION = CONFIG['zotero_collection']
 
 # ---- 期刊（按 ISSN 抓最新论文）----

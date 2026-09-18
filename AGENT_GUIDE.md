@@ -47,6 +47,10 @@ python3 update.py all        # 第一份简报（3–10 分钟）
 python3 preview.py           # 终端验证
 ```
 
+> 用户通常会把本目录**直接交给你**并说「帮我装好」。那就照本文档走一遍：
+> 先读环境、再跑向导、部署部件、逐项验证。**遇到与本机不符的地方就地调整**，
+> 不要死守脚本里的默认值。
+
 验证清单（**不要只看命令退出码**）：
 
 1. `python3 update.py status` —— 应显示 Zotero 可读、API key OK、数据目录路径
@@ -123,6 +127,17 @@ python3 preview.py           # 终端验证
 
 ---
 
+## 4.5 本包**没有**下载论文全文的能力（重要，别自作主张加回来）
+
+`translate_worker.py` 只在 Zotero 里找全文：命中就用它已有的 PDF，没有就**停下并提示用户
+去 Zotero 补全文**。仓库里不存在 `fetchpdf.py`，也没有任何 `curl` 下载 PDF 的代码。
+
+如果用户要求「自动下载全文」，那是**新的需求**，不是修 bug：需要用户明确同意后，
+你才去实现（并且要提醒他：出版社站点需要订阅权限、批量下载可能违反使用条款）。
+**不要**在用户没要求的情况下把它加回来，也不要把它做成一个默认开启的开关。
+
+---
+
 ## 5. 改造指引
 
 ### 换领域（最常见）
@@ -183,6 +198,7 @@ print('data_dir  :', C.DATA_DIR)
 print('zotero db :', C.ZOTERO_DB, '存在' if os.path.exists(C.ZOTERO_DB) else '**缺失**')
 print('terms     :', len(C.TERMS_CORE), '个核心词')
 print('journals  :', len(C.CROSSREF_JOURNALS), '种')
-print('auto_fetch:', C.ENABLE_AUTO_FETCH)
+import os as _os
+print('下载能力  :', '有' if _os.path.exists('translate/fetchpdf.py') else '无（本包设计如此）')
 PY
 ```

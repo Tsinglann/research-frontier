@@ -204,8 +204,7 @@ def main():
     latex = os.path.expanduser(
         ask('⑥（可选）LaTeX / Markdown 工作目录，回车跳过', '~/Documents'))
 
-    enable_fetch = confirm('⑦ 是否允许自动下载论文全文？（发行版默认关闭）', False)
-    api_key = ask('⑧ DeepSeek API Key（回车则读环境变量 DEEPSEEK_API_KEY）', '')
+    api_key = ask('⑦ DeepSeek API Key（回车则读环境变量 DEEPSEEK_API_KEY）', '')
 
     cfg = json.load(open(os.path.join(PKG, 'templates', 'config.example.json'),
                         encoding='utf-8'))
@@ -216,7 +215,6 @@ def main():
         'obsidian_vault': obsidian,
         'matlab_dir': matlab,
         'latex_dirs': [latex] if latex and os.path.isdir(latex) else [],
-        'enable_auto_fetch': bool(enable_fetch),
     })
     os.makedirs(workdir, exist_ok=True)
     with open(os.path.join(PKG, 'config.json'), 'w', encoding='utf-8') as f:
