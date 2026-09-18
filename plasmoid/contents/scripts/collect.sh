@@ -34,16 +34,36 @@ sys.stdout.write(json.dumps(d,ensure_ascii=False,separators=(",",":")))
 ' "$f"
       ;;
   open)
-      # 用系统默认浏览器打开日历回顾网页（数据由 update.py 生成）
-      # 用 DATA_DIR 拼路径而不是硬编码，避免路径里有空格时出问题
-      # 存档固定放在 ~/Documents/daily（见 researchlib/archive.py 的 ARCHIVE_DIR）
-      # 用 $HOME 直接拼，层级关系一目了然（从 SRC 往上数容易错，本喵已经错过一次）
+      # 用系统默认浏览器打开日历回顾网页（数据由 update.py 生成）。
+      # ⚠️ 必须让浏览器进程脱离 plasmashell：原来直接 `xdg-open "$u" &` 仍是它的
+      # 子进程，plasmashell 回收子进程时这次启动就断了 ——
+      # 表现为「第一次能打开，关掉之后再点就没反应」。
+      # 所以用 setsid + nohup 起一个独立会话，再 disown。
       u="$DATA_DIR/../daily/site/index.html"
-      if [ -f "$u" ]; then
-          /usr/bin/xdg-open "$u" >/dev/null 2>&1 &
-          echo "OPENED $u"
-      else
+      if [ ! -f "$u" ]; then
           echo "MISSING $u"
+      else
+          launched=""
+          # 优先用户自己的浏览器包装脚本（可能带代理参数），再回退通用名字
+          for b in "$HOME/.local/bin/chrome" "$HOME/.local/bin/chromium" \
+                   "$HOME/.local/bin/firefox" google-chrome chrome chromium firefox; do
+              if command -v "$b" >/dev/null 2>&1; then
+                  setsid nohup "$b" "$u" >/dev/null 2>&1 &
+                  disown 2>/dev/null || true
+                  launched="$b"
+                  break
+              fi
+          done
+          if [ -z "$launched" ] && command -v xdg-open >/dev/null 2>&1; then
+              setsid nohup xdg-open "$u" >/dev/null 2>&1 &
+              disown 2>/dev/null || true
+              launched="xdg-open"
+          fi
+          if [ -n "$launched" ]; then
+              echo "OPENED $u via $launched"
+          else
+              echo "NO-BROWSER $u"
+          fi
       fi
       ;;
   update)
