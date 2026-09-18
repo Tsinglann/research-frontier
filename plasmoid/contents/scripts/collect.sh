@@ -39,8 +39,23 @@ sys.stdout.write(json.dumps(d,ensure_ascii=False,separators=(",",":")))
       # 子进程，plasmashell 回收子进程时这次启动就断了 ——
       # 表现为「第一次能打开，关掉之后再点就没反应」。
       # 所以用 setsid + nohup 起一个独立会话，再 disown。
-      u="$HOME/Documents/daily/site/index.html"
-      if [ ! -f "$u" ]; then
+            u="$HOME/Documents/daily/site/index.html"
+
+      # 先确保本地服务在跑：网页端的「加一篇」需要它（file:// 下浏览器不允许写数据）。
+      # 服务只监听 127.0.0.1，且只提供本页与两个接口。
+      PY="${PY:-/usr/bin/python3}"
+      if ! curl -s -o /dev/null --max-time 2 "http://127.0.0.1:8765/api/state" 2>/dev/null; then
+          if [ -f "$SRC/server.py" ]; then
+              setsid nohup "$PY" "$SRC/server.py" --port 8765 >/dev/null 2>&1 &
+              disown 2>/dev/null || true
+              sleep 1.5
+          fi
+      fi
+      if curl -s -o /dev/null --max-time 2 "http://127.0.0.1:8765/api/state" 2>/dev/null; then
+          u="http://127.0.0.1:8765/"        # 服务可用 → 打开带后端的网页
+      fi
+
+      if [ ! -f "$u" ] && [ "${u#http}" = "$u" ]; then
           echo "MISSING $u"
       else
           launched=""
