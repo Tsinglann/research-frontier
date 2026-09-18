@@ -1,0 +1,7 @@
+{
+  "uuid": "research-frontier@researchfrontier",
+  "name": "研究前沿",
+  "description": "显示 Zotero 画像 + 每周新论文 + 中文简报（数据由 research-frontier 后端生成）",
+  "shell-version": ["45", "46", "47"],
+  "version": 1
+}

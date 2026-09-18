@@ -1,0 +1,58 @@
+{
+  "_说明": "研究前沿助手配置。install.sh / wizard.py 会生成一份到你的工作目录；也可手工编辑。",
+
+  "workdir": "~/research-frontier-work",
+  "_workdir": "工作目录：抓取数据、每日存档、翻译项目都放在这里。安装时会询问你。",
+
+  "zotero_dir": "~/Zotero",
+  "_zotero_dir": "Zotero 数据目录（含 zotero.sqlite）。默认在 ~/Zotero；若你改过位置请填绝对路径。",
+
+  "data_dir": "",
+  "_data_dir": "运行时数据目录。留空 = <workdir>/runtime。部件读取这里的 JSON。",
+
+  "obsidian_vault": "",
+  "_obsidian_vault": "（可选）Obsidian 库路径。填了会扫描你的笔记，把『正在跟进的笔记』纳入画像。",
+
+  "matlab_dir": "",
+  "_matlab_dir": "（可选）你的 MATLAB 程序目录。填了会扫描 .m 文件的关键词，纳入画像的『工作内容』。",
+
+  "latex_dirs": [],
+  "_latex_dirs": "（可选）你的 LaTeX / Markdown 工作目录列表，用于补充画像。例如 [\"~/Documents/your-latex-dir\"]",
+
+  "window_days": 45,
+  "_window_days": "抓取最近多少天内发表的论文。",
+
+  "top_n": 15,
+  "_top_n": "每轮入选论文数（也等于调用 LLM 生成简介的次数）。",
+
+  "min_score": 3.0,
+  "_min_score": "相关度门槛。核心术语命中一次 +3、次级 +2、外围 +1。",
+
+  "max_per_source": 3,
+  "_max_per_source": "同一期刊最多入选几篇，避免单一期刊霸榜。",
+
+  "model_brief": "deepseek-v4-flash",
+  "_model_brief": "生成单篇简介与经典回顾用的模型。",
+
+  "model_synth": "deepseek-v4-pro",
+  "_model_synth": "生成综合简报用的模型（需要跨文献综合）。",
+
+  "journals": [
+    {"name": "Physical Review Letters", "issn": "0031-9007"},
+    {"name": "Physical Review E", "issn": "2470-0045"},
+    {"name": "Physical Review X", "issn": "2160-3308"},
+    {"name": "Nature Physics", "issn": "1745-2473"},
+    {"name": "Nature Communications", "issn": "2041-1723"},
+    {"name": "New Journal of Physics", "issn": "1367-2630"},
+    {"name": "Journal of Statistical Mechanics: Theory and Experiment", "issn": "1742-5468"},
+    {"name": "Journal of Chemical Physics", "issn": "0021-9606"},
+    {"name": "EPL (Europhysics Letters)", "issn": "0295-5075"}
+  ],
+  "_journals": "按 ISSN 抓这些期刊的最新论文。默认偏向统计物理/软物质；请按你的领域增删。",
+
+  "zotero_collection": "研究前沿app收藏",
+  "_zotero_collection": "点『收藏』时把论文写进 Zotero 的这个分类（不存在会自动创建）。",
+
+  "enable_auto_fetch": false,
+  "_enable_auto_fetch": "发行版默认 false：**不自动抓取/下载论文全文**。改为 true 才会尝试下载 PDF。"
+}

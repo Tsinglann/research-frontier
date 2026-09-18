@@ -1,0 +1,19 @@
+{
+    "KPackageStructure": "Plasma/Applet",
+    "KPlugin": {
+        "Authors": [ { "Name": "researchfrontier", "Email": "research-frontier@example.invalid" } ],
+        "Category": "Education",
+        "Description": "研究前沿助手：Zotero 研究画像 + arXiv/期刊新论文中文简报，每天 06:00 自动更新",
+        "EnabledByDefault": true,
+        "Icon": "office-chart-bar",
+        "Id": "org.researchfrontier.widget",
+        "Name": "研究前沿",
+        "Name[zh_CN]": "研究前沿",
+        "ServiceTypes": [ "Plasma/Applet" ],
+        "Version": "1.0",
+        "Website": "https://arxiv.org"
+    },
+    "X-Plasma-API": "declarativeappletscript",
+    "X-Plasma-API-Minimum-Version": "6.0",
+    "X-Plasma-MainScript": "ui/main.qml"
+}

@@ -1,0 +1,10 @@
+__pycache__/
+*.pyc
+.env
+config.json
+_katex/
+dist/
+runtime/
+daily/
+translations/
+*.log
